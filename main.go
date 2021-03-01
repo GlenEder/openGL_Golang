@@ -5,7 +5,7 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
-	//"github.com/go-gl/mathgl/mgl32"
+	"openGL_Golang/Objects"
 	"openGL_Golang/shaders"
 	"runtime"
 	"strings"
@@ -19,12 +19,7 @@ const (
 
 var angle = 0.0
 
-//Points of triangle that are used for rendering our first triangle
-var trianglePoints = []float32{
-	-1.0, -1.0, 0.0,
-	1.0, -1.0, 0.0,
-	0.0, 1.0, 0.0,
-}
+
 
 
 func init() {
@@ -45,14 +40,16 @@ func main() {
 
 	//init opengl now that we have a window in context
 	program := initOpenGL()
-
 	setupView(program)
 
 	//Ensure that we can read input
 	window.SetInputMode(glfw.StickyKeysMode, glfw.True)
 
-	//load up our triangle
-	triangle := genVAO(trianglePoints)
+	//load up our triangle and cube
+	//triangle := genVAO(Objects.TrianglePoints)
+	Objects.GenCubeColors()
+	cube := genVAO(Objects.CubeVertices)
+	genColorBuffer(Objects.CubeColors)
 
 	//render loop
 	prevTime := glfw.GetTime()
@@ -61,7 +58,7 @@ func main() {
 		var deltaTime = t - prevTime
 		prevTime = t
 
-		draw(window, program, deltaTime, triangle)
+		draw(window, program, deltaTime, cube)
 	}
 
 }
@@ -78,9 +75,7 @@ func draw(window *glfw.Window, program uint32, delta float64, vao uint32) {
 	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 
-
-	gl.BindVertexArray(vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, 3)
+	Objects.DrawCube(vao)
 
 	//Swap buffers and poll for events
 	window.SwapBuffers()
@@ -104,6 +99,10 @@ func setupView(program uint32) {
 	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 
+	//Enable depth test
+	gl.Enable(gl.DEPTH_TEST)
+	//accept fragment if it is closer to camera than former
+	gl.DepthFunc(gl.LESS)
 
 }
 
@@ -125,6 +124,19 @@ func genVAO(points []float32) uint32 {
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
 
 	return vao
+}
+
+func genColorBuffer(values []float32) uint32 {
+
+	var colorBuffer uint32
+	gl.GenBuffers(1, &colorBuffer)
+	gl.BindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+	gl.BufferData(gl.ARRAY_BUFFER, 4 * len(values), gl.Ptr(values), gl.STATIC_DRAW)
+	gl.EnableVertexAttribArray(1)
+	gl.BindBuffer(gl.ARRAY_BUFFER, colorBuffer)
+	gl.VertexAttribPointer(1, 3, gl.FLOAT, false, 0, nil)
+
+	return colorBuffer
 }
 
 func createMainWindow() *glfw.Window {
