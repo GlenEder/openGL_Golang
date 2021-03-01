@@ -1,1 +1,6 @@
+
+#unrequired file from go mod tidy
+go.sum
+
+#hide goland files
 .idea
