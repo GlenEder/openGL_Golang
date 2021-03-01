@@ -24,14 +24,25 @@ func init() {
 func main() {
 
 	window := createMainWindow()
-	defer window.Destroy()
 	defer glfw.Terminate()
 
-	//render loop
-	for !window.ShouldClose() {
+	//Ensure that we can read input
+	window.SetInputMode(glfw.StickyKeysMode, glfw.True)
 
+	//render loop
+	for !window.ShouldClose() && window.GetKey(glfw.KeyEscape) != glfw.Press {
+		draw(window)
 	}
 
+}
+
+//Render method
+func draw(window *glfw.Window) {
+
+
+	//Swap buffers and poll for events
+	window.SwapBuffers()
+	glfw.PollEvents()
 }
 
 func createMainWindow() *glfw.Window {
