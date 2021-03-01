@@ -5,7 +5,6 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/mathgl/mgl32"
-
 	//"github.com/go-gl/mathgl/mgl32"
 	"openGL_Golang/shaders"
 	"runtime"
@@ -17,6 +16,8 @@ const (
 	WIDTH = 480
 	HEIGHT = 480
 )
+
+var angle = 0.0
 
 //Points of triangle that are used for rendering our first triangle
 var trianglePoints = []float32{
@@ -54,19 +55,28 @@ func main() {
 	triangle := genVAO(trianglePoints)
 
 	//render loop
+	prevTime := glfw.GetTime()
 	for !window.ShouldClose() && window.GetKey(glfw.KeyEscape) != glfw.Press {
-		draw(window, program, triangle)
+		t := glfw.GetTime()
+		var deltaTime = t - prevTime
+		prevTime = t
+
+		draw(window, program, deltaTime, triangle)
 	}
 
 }
 
 //Render method
-func draw(window *glfw.Window, program uint32, vao uint32) {
+func draw(window *glfw.Window, program uint32, delta float64, vao uint32) {
 	//clear screen
 	gl.ClearColor(0, 0, 1, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-
+	//Rotate the triangle for pure flex
+	angle += delta
+	model := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
+	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
+	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
 
 
 	gl.BindVertexArray(vao)
