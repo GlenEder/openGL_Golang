@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/gl/v4.1-core/gl"
 	"runtime"
 )
 
@@ -10,6 +12,14 @@ const (
 	WIDTH = 480
 	HEIGHT = 480
 )
+
+//Points of triangle that are used for rendering our first triangle
+var trianglePoints = []float32{
+	-1.0, -1.0, 0.0,
+	1.0, -1.0, 0.0,
+	0.0, 1.0, 0.0,
+}
+
 
 func init() {
 	//lock onto main thread for glfw and gl calls
@@ -23,26 +33,56 @@ func init() {
 
 func main() {
 
+	//generate window
 	window := createMainWindow()
 	defer glfw.Terminate()
+
+	//init opengl now that we have a window in context
+	initOpenGL()
 
 	//Ensure that we can read input
 	window.SetInputMode(glfw.StickyKeysMode, glfw.True)
 
+	//load up our triangle
+	triangle := genVBO(trianglePoints)
+
 	//render loop
 	for !window.ShouldClose() && window.GetKey(glfw.KeyEscape) != glfw.Press {
-		draw(window)
+		draw(window, triangle)
 	}
 
 }
 
 //Render method
-func draw(window *glfw.Window) {
+func draw(window *glfw.Window, vbo uint32) {
+	//clear screen
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	gl.EnableVertexAttribArray(0)
+	gl.DrawArrays(gl.TRIANGLES, 0, 3)
+	gl.DisableVertexAttribArray(0)
 
 	//Swap buffers and poll for events
 	window.SwapBuffers()
 	glfw.PollEvents()
+}
+
+func genVBO(points []float32) uint32 {
+
+	//create vertex buffer object to load data into
+	var vbo uint32
+	gl.GenBuffers(1, &vbo)
+
+	//Signal that rest of calls are about our buffer we made
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+
+	//Load data into buffer (using static draw since we are not modifying point data)
+	gl.BufferData(gl.ARRAY_BUFFER, len(points), gl.Ptr(points), gl.STATIC_DRAW)
+	gl.EnableVertexAttribArray(0)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+
+	return vbo
 }
 
 func createMainWindow() *glfw.Window {
@@ -68,4 +108,15 @@ func createMainWindow() *glfw.Window {
 	window.MakeContextCurrent()
 
 	return window
+}
+
+//Only call after a window's context has been made current
+func initOpenGL() {
+	// Initialize Glow
+	if err := gl.Init(); err != nil {
+		panic(err)
+	}
+
+	version := gl.GoStr(gl.GetString(gl.VERSION))
+	fmt.Println("OpenGL version", version)
 }
