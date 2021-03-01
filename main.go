@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/mathgl/mgl32"
+
+	//"github.com/go-gl/mathgl/mgl32"
 	"openGL_Golang/shaders"
 	"runtime"
 	"strings"
@@ -42,6 +45,8 @@ func main() {
 	//init opengl now that we have a window in context
 	program := initOpenGL()
 
+	setupView(program)
+
 	//Ensure that we can read input
 	window.SetInputMode(glfw.StickyKeysMode, glfw.True)
 
@@ -61,8 +66,8 @@ func draw(window *glfw.Window, program uint32, vao uint32) {
 	gl.ClearColor(0, 0, 1, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-	//use our program
-	gl.UseProgram(program)
+
+
 
 	gl.BindVertexArray(vao)
 	gl.DrawArrays(gl.TRIANGLES, 0, 3)
@@ -70,6 +75,26 @@ func draw(window *glfw.Window, program uint32, vao uint32) {
 	//Swap buffers and poll for events
 	window.SwapBuffers()
 	glfw.PollEvents()
+}
+
+func setupView(program uint32) {
+
+	//use our opengl program
+	gl.UseProgram(program)
+
+	projection := mgl32.Perspective(mgl32.DegToRad(45.0), float32(WIDTH)/HEIGHT, 0.1, 10.0)
+	projectionUniform := gl.GetUniformLocation(program, gl.Str("projection\x00"))
+	gl.UniformMatrix4fv(projectionUniform, 1, false, &projection[0])
+
+	camera := mgl32.LookAtV(mgl32.Vec3{4, 3, 3}, mgl32.Vec3{0, 0, 0}, mgl32.Vec3{0, 1, 0})
+	cameraUniform := gl.GetUniformLocation(program, gl.Str("camera\x00"))
+	gl.UniformMatrix4fv(cameraUniform, 1, false, &camera[0])
+
+	model := mgl32.Ident4()
+	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
+	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
+
+
 }
 
 func genVAO(points []float32) uint32 {

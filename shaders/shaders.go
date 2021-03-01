@@ -4,8 +4,11 @@ const (
 	VertexShader = `
 		#version 410
 		layout(location = 0) in vec3 vertexPos;
+		uniform mat4 projection;
+		uniform mat4 camera;
+		uniform mat4 model;
 		void main()	{
-			gl_Position = vec4(vertexPos, 1.0);
+			gl_Position = projection * camera * model * vec4(vertexPos, 1.0);
 		}
 	` + "\x00"
 
