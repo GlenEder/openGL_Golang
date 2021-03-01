@@ -51,6 +51,11 @@ func main() {
 	cube := genVAO(Objects.CubeVertices)
 	genColorBuffer(Objects.CubeColors)
 
+	//second cube for shits and giggles
+	Objects.GenCubeColors()
+	cube2 := genVAO(Objects.CubeVertices)
+	genColorBuffer(Objects.CubeColors)
+
 	//render loop
 	prevTime := glfw.GetTime()
 	for !window.ShouldClose() && window.GetKey(glfw.KeyEscape) != glfw.Press {
@@ -58,13 +63,13 @@ func main() {
 		var deltaTime = t - prevTime
 		prevTime = t
 
-		draw(window, program, deltaTime, cube)
+		draw(window, program, deltaTime, cube, cube2)
 	}
 
 }
 
 //Render method
-func draw(window *glfw.Window, program uint32, delta float64, vao uint32) {
+func draw(window *glfw.Window, program uint32, delta float64, vao uint32, vao2 uint32) {
 	//clear screen
 	gl.ClearColor(0, 0, 1, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -74,8 +79,11 @@ func draw(window *glfw.Window, program uint32, delta float64, vao uint32) {
 	model := mgl32.HomogRotate3D(float32(angle), mgl32.Vec3{0, 1, 0})
 	modelUniform := gl.GetUniformLocation(program, gl.Str("model\x00"))
 	gl.UniformMatrix4fv(modelUniform, 1, false, &model[0])
-
 	Objects.DrawCube(vao)
+
+	secModel := mgl32.Translate3D(1, .2, -.2)
+	gl.UniformMatrix4fv(modelUniform, 1, false, &secModel[0])
+	Objects.DrawCube(vao2)
 
 	//Swap buffers and poll for events
 	window.SwapBuffers()

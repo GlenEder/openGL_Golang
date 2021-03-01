@@ -13,10 +13,13 @@ func DrawCube(vao uint32) {
 }
 
 func GenCubeColors() {
+	var colors []float32
 	numColorsToGen := 36 * 3
 	for i := 0; i < numColorsToGen; i++ {
-		CubeColors = append(CubeColors, rand.Float32())
+		colors = append(colors, rand.Float32())
 	}
+
+	CubeColors = colors
 }
 
 var CubeVertices = []float32{
